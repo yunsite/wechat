@@ -1,0 +1,74 @@
+
+Redis+Thinkphp=》抢票
+1 超大流量的抢票（比如地铁，限时抢购这样的）
+   数据千万不要往数据库存储 ；数据库容易发生崩溃
+   抢票 （1）先建一个redis 存储一等奖
+           （2）建一个redis 存储 二 等奖
+           （3）第三个 redis 存储 单一的 OpenID或者手机号，唯一编号等；
+          特别备注： 可以用 Set集合存储，插入重复的OpenID 返回 0 ；正确返回 插入个数1,2,3,4。。。。。
+          （4）第四个 redis 存储 openid,ticketsID,返回用户 所获得的 票ID
+   最后一次性到处 第四个redis记录 存储到数据库作为 记录
+     /*
+     * 是否已经抢票
+     */
+     public function is_fight_tickets($fightticktes,$openid){
+          $where['openid'] = $openid;
+          $where["telephone"] = array('exp', 'is not NULL');
+          $ticketsresults = $fightticktes ->where($where) -> find();
+          ///判断是否已经购票
+          if(!empty($ticketsresults)){
+               return $ticketsresults;
+          }else{
+               $allowtickets = $this->allowtickets("");
+               ///返回数字 或者 false
+               if($allowtickets){
+                    ////插入
+               }else{
+               }    
+          }
+     }
+    //允许
+    public function allowtickets($openid){
+         $Cache = Cache::getInstance('Redis');
+         $result  =$Cache->lpop("fight_tickets:ticketlist");
+         return $result;
+    }
+    public function createtickets(){
+         $Cache = Cache::getInstance('Redis');
+         ///$hashset = "fight_tickets:";
+         for($i=10;$i<20000;$i++){
+              $Cache->rpush("fight_tickets:ticketlist",$i);
+              echo $i;
+         }
+
+        SADD key member [member ...]
+        将一个或多个 member 元素加入到集合 key 当中，已经存在于集合的 member 元素将被忽略。
+        假如 key 不存在，则创建一个只包含 member 元素作成员的集合。
+        当 key 不是集合类型时，返回一个错误。
+
+        返回值:
+          被添加到集合中的新元素的数量，不包括被忽略的元素。
+        # 添加单个元素
+        redis> SADD bbs "discuz.net"
+        (integer) 1
+        # 添加重复元素
+        redis> SADD bbs "discuz.net"
+        (integer) 0
+        # 添加多个元素
+        redis> SADD bbs "tianya.cn" "groups.google.com"
+        (integer) 2
+         /*
+         从list 头部压入一个元素   先进后出
+         lpush mylist "word"
+         lpush mylist "ehll"
+         lrange mylist 0 -1    显示  ehll    word
+         */
+         /*
+        rpop  从list 尾部删除一个元素，并返回删除的元素
+         ///rpop  mylist
+         //$times = $Cache->get($hashset);
+         //$key = "集合数据iD";
+         //$Cache->zrem($hashset,$key);*/
+
+
+    }
